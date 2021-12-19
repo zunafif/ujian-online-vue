@@ -22,6 +22,7 @@ import nestedRoutes from './modules/nested';
 import errorRoutes from './modules/error';
 import excelRoutes from './modules/excel';
 import permissionRoutes from './modules/permission';
+import praktikumRoutes from './modules/praktikum';
 
 /**
  * Sub-menu only appear when children.length>=1
@@ -141,6 +142,7 @@ export const asyncRoutes = [
   nestedRoutes,
   tableRoutes,
   adminRoutes,
+  praktikumRoutes,
   {
     path: '/theme',
     component: Layout,

@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.nama" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="query.nama" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t('table.search') }}
       </el-button>
@@ -9,19 +9,10 @@
         {{ $t('table.add') }}
       </el-button>
     </div>
-    <el-table
-      :key="tableKey"
-      v-loading="listLoading"
-      :data="list"
-      border
-      fit
-      highlight-current-row
-      style="width: 100%;"
-      @sort-change="sortChange"
-    >
-      <el-table-column align="center" label="ID" prop="id" sortable="custom" width="80">
+    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
+      <el-table-column align="center" label="ID" sortable="custom" width="80">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <span>{{ scope.row.index }}</span>
         </template>
       </el-table-column>
 
@@ -63,6 +54,8 @@
       </el-table-column>
     </el-table>
 
+    <pagination v-show="total>0" :total="total" :page.sync="query.page" :limit.sync="query.limit" @pagination="getList" />
+
     <el-dialog :title="'Tambah Praktikum'" :visible.sync="praktikumFormVisible">
       <div class="form-container">
         <el-form ref="praktikumForm" :model="currentPraktikum" label-position="left" label-width="150px" style="max-width: 500px;">
@@ -98,12 +91,14 @@
 </template>
 
 <script>
+import Pagination from '@/components/Pagination';
 import Resource from '@/api/resource';
 import waves from '@/directive/waves';
 const praktikumResource = new Resource('praktikum');
 
 export default {
   name: 'PraktikumList',
+  components: { Pagination },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -116,27 +111,21 @@ export default {
   },
   data() {
     return {
+      total: 0,
       tableKey: 0,
       list: null,
       formTitle: '',
       listLoading: true,
       praktikumFormVisible: false,
       currentPraktikum: {},
-      temp: {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        type: '',
-        status: 'aktif',
-      },
       statusOptions: ['aktif', 'nonaktif'],
-      listQuery: {
+      query: {
+        limit: 5,
         page: 1,
-        limit: 20,
-        nama: undefined,
-        sort: '+id',
+        nama: '',
+        periode: undefined,
+        kode: undefined,
+        status: undefined,
       },
     };
   },
@@ -145,13 +134,18 @@ export default {
   },
   methods: {
     async getList() {
+      const { limit, page } = this.query;
       this.listLoading = true;
-      const { data } = await praktikumResource.list({});
+      const { data, meta } = await praktikumResource.list(this.query);
       this.list = data;
+      this.list.forEach((element, index) => {
+        element['index'] = (page - 1) * limit + index + 1;
+      });
+      this.total = meta.total;
       this.listLoading = false;
     },
     handleFilter() {
-      this.listQuery.page = 1;
+      this.query.page = 1;
       this.getList();
     },
     sortChange(data) {
@@ -162,9 +156,9 @@ export default {
     },
     sortByID(order) {
       if (order === 'ascending') {
-        this.listQuery.sort = '+id';
+        this.query.sort = '+id';
       } else {
-        this.listQuery.sort = '-id';
+        this.query.sort = '-id';
       }
       this.handleFilter();
     },

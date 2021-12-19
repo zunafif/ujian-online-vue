@@ -18,6 +18,7 @@ use \App\Laravue\Acl;
 |
 */
 Route::apiResource('praktikum', 'PraktikumController');
+Route::apiResource('modul', 'ModulController');
 Route::namespace('Api')->group(function() {
     Route::post('auth/login', 'AuthController@login');
     Route::group(['middleware' => 'auth:sanctum'], function () {

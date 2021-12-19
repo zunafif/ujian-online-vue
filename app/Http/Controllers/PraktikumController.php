@@ -6,6 +6,7 @@ use App\Http\Resources\PraktikumResource;
 use App\Laravue\Models\Praktikum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Config;
 
 class PraktikumController extends Controller
 {
@@ -16,7 +17,8 @@ class PraktikumController extends Controller
      */
     public function index()
     {
-        return PraktikumResource::collection(Praktikum::all());
+        $limit = config('config.paginate');
+        return PraktikumResource::collection(Praktikum::paginate($limit));
     }
 
     /**

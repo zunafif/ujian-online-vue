@@ -15,12 +15,6 @@ const adminRoutes = {
   children: [
     /** User managements */
     {
-      path: 'praktikum',
-      component: () => import('@/views/praktikum/List'),
-      name: 'PraktikumList',
-      meta: { title: 'Praktikum', icon: 'education' },
-    },
-    {
       path: 'users/edit/:id(\\d+)',
       component: () => import('@/views/users/UserProfile'),
       name: 'UserProfile',
