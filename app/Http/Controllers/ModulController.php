@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ModulResource;
 use App\Laravue\Models\Modul;
-// use App\Laravue\Models\Praktikum;
+use App\Laravue\Models\Praktikum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr; 
+use Config;
 
 class ModulController extends Controller
 {
@@ -16,21 +17,21 @@ class ModulController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        // return ModulResource::collection(
-        //     DB::table('modul')
-        //     ->join('praktikum', 'modul.id_praktikum', 'praktikum.id')
-        //     ->select('modul.*','praktikum.nama')
-        //     ->get(),
-        // );
+        $limitConfig = config('config.paginate');
+        $searchParam = $request->all();
+        $nama_modul = Arr::get($searchParam, 'nama_modul', '');
+        $limit = Arr::get($searchParam, 'limit', $limitConfig);
+        $data = Modul::query()
+            ->join('praktikum', 'modul.id_praktikum', 'praktikum.id')
+            ->select('modul.id','modul.id_praktikum','modul.nama_modul','praktikum.nama','modul.jumlah_bab','modul.materi');
+        
+        if(!empty($nama_modul)){
+            $data->where('nama_modul', 'LIKE', '%'. $nama_modul .'%');
+        }
 
-        // $dataModul = Modul::all();
-        // // $dataPraktikum = Praktikum::all();
-
-        // var_dump($dataModul);
-
-        return ModulResource::collection(Modul::all());
+        return ModulResource::collection($data->paginate($limit));
     }
 
     /**
@@ -55,7 +56,7 @@ class ModulController extends Controller
             $request->all(),
             [
                 'nama_modul' => ['required'],
-                'jumlah_bab' => ['required' | 'number'],
+                'jumlah_bab' => ['required'],
                 'materi' => ['required'],
             ]
         );
@@ -66,6 +67,7 @@ class ModulController extends Controller
             $params = $request->all();
             $modul = Modul::create([
                 'nama_modul' => $params['nama_modul'],
+                'id_praktikum' => $params['id_praktikum'],
                 'jumlah_bab' => $params['jumlah_bab'],
                 'materi' => $params['materi'],
             ]);
@@ -122,6 +124,7 @@ class ModulController extends Controller
             } else {
                 $params = $request->all();
                 $modul->nama_modul = $params['nama_modul'];
+                $modul->id_praktikum = $params['id_praktikum'];
                 $modul->jumlah_bab = $params['jumlah_bab'];
                 $modul->materi = $params['materi'];
                 $modul->save();

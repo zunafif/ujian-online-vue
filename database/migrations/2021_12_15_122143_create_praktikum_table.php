@@ -13,8 +13,8 @@ class CreatePraktikumTable extends Migration
      */
     public function up()
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->bigIncrements('id');
+        Schema::create('praktikum', function (Blueprint $table) {
+            $table->increments('id');
             $table->string('nama');
             $table->string('periode');
             $table->string('kode');

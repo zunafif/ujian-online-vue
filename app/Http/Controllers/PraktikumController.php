@@ -6,6 +6,7 @@ use App\Http\Resources\PraktikumResource;
 use App\Laravue\Models\Praktikum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Arr;
 use Config;
 
 class PraktikumController extends Controller
@@ -15,10 +16,19 @@ class PraktikumController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $limit = config('config.paginate');
-        return PraktikumResource::collection(Praktikum::paginate($limit));
+        $limitConfig = config('config.paginate');
+        $searchParams = $request->all();
+        $limit = Arr::get($searchParams, 'limit', $limitConfig);
+        $nama = Arr::get($searchParams, 'nama', '');
+        $praktikumQuery = Praktikum::query();
+
+        if (!empty($nama)) {
+            $praktikumQuery->where('nama', 'LIKE', '%' . $nama . '%');
+        }
+
+        return PraktikumResource::collection($praktikumQuery->paginate($limit));
     }
 
     /**

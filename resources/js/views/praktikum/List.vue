@@ -16,7 +16,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column align="Left" label="Nama" width="350">
+      <el-table-column align="Left" label="Nama">
         <template slot-scope="scope">
           <span>{{ scope.row.nama }}</span>
         </template>

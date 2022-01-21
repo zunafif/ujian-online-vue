@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.nama" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.nama_modul" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t('table.search') }}
       </el-button>
@@ -9,35 +9,32 @@
         {{ $t('table.add') }}
       </el-button>
     </div>
-    <el-table
-      :key="tableKey"
-      v-loading="listLoading"
-      :data="list"
-      border
-      fit
-      highlight-current-row
-      style="width: 100%;"
-      @sort-change="sortChange"
-    >
-      <el-table-column align="center" label="ID" prop="id" sortable="custom" width="63">
+    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
+      <el-table-column align="center" label="ID" prop="id" sortable="custom" width="60">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <span>{{ scope.row.index }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column align="Left" label="Modul" width="300">
+      <el-table-column align="Left" label="Modul" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.nama_modul }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column align="center" label="Jumlah Bab" width="150">
+      <el-table-column align="left" label="Praktikum">
+        <template slot-scope="scope">
+          <span>{{ scope.row.nama }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column align="center" label="Jumlah Bab" width="110">
         <template slot-scope="scope">
           <span>{{ scope.row.jumlah_bab }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column align="left" label="Materi" width="350">
+      <el-table-column align="left" label="Materi" width="292">
         <template slot-scope="scope">
           <span>{{ scope.row.materi }}</span>
         </template>
@@ -63,6 +60,14 @@
           <el-form-item label="Modul" prop="nama_modul">
             <el-input v-model="currentModul.nama_modul" />
           </el-form-item>
+          <!-- <template slot-scope="scope">
+          <span>{{ scope.row.materi }}</span>
+        </template> -->
+          <el-form-item label="Praktikum" prop="nama">
+            <el-select v-model="currentModul.id_praktikum" class="filter-item" placeholder="Please select" @change="switchView($event, $event.target.selectedIndex)">
+              <el-option v-for="(item, index) in statusOptions" :key="item" :label="item" :value="index+1" />
+            </el-select>
+          </el-form-item>
           <el-form-item label="Jumlah Bab" prop="jumlah_bab">
             <el-input v-model="currentModul.jumlah_bab" />
           </el-form-item>
@@ -84,26 +89,31 @@
 </template>
 
 <script>
+import Pagination from '@/components/Pagination';
 import Resource from '@/api/resource';
 import waves from '@/directive/waves';
 const modulResource = new Resource('modul');
 
 export default {
   name: 'ModulList',
+  components: { Pagination },
   directives: { waves },
   data() {
     return {
+      total: 0,
       tableKey: 0,
       list: null,
       formTitle: '',
       listLoading: true,
       modulFormVisible: false,
       currentModul: {},
+      statusOptions: ['Sistem operasi', 'Jaringan Komputer', 'Basis Data', 'Pemrograman Berbasis Objek', 'Struktur Data', 'Bahasa Pemrograman Java', 'Multimedia'],
       listQuery: {
         page: 1,
-        limit: 20,
+        limit: 5,
         nama_modul: undefined,
         sort: '+id',
+        statusOption: undefined,
       },
     };
   },
@@ -112,9 +122,15 @@ export default {
   },
   methods: {
     async getList() {
+      const { limit, page } = this.listQuery;
       this.listLoading = true;
-      const { data } = await modulResource.list({});
+      const { data, meta } = await modulResource.list(this.listQuery);
       this.list = data;
+      this.listLoading = false;
+      this.list.forEach((element, index) => {
+        element['index'] = (page - 1) * limit + index + 1;
+      });
+      this.total = meta.total;
       this.listLoading = false;
     },
     handleFilter() {
@@ -160,6 +176,7 @@ export default {
             });
             this.currentModul = {
               nama_modul: '',
+              nama: '',
               jumlah_bab: '',
               materi: '',
             };
@@ -176,12 +193,14 @@ export default {
       this.currentModul = {
         id: null,
         nama_modul: '',
+        id_praktikum: undefined,
+        nama: '',
         jumlah_bab: '',
         materi: '',
       };
     },
     handleDelete(id, nama_modul) {
-      this.$confirm('This will permanently delete praktikum ' + nama_modul + '. Continue?', 'Warning', {
+      this.$confirm('This will permanently delete modul ' + nama_modul + '. Continue?', 'Warning', {
         confirmButtonText: 'OK',
         cancelButtonText: 'Cancel',
         type: 'warning',
