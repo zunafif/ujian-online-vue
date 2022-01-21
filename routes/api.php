@@ -17,8 +17,20 @@ use \App\Laravue\Acl;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+//Praktikum
 Route::apiResource('praktikum', 'PraktikumController');
+Route::get('getPraktikum/{id}', 'PraktikumController@getPraktikum');
+
+//Modul
 Route::apiResource('modul', 'ModulController');
+Route::get('getModul/{id}', 'ModulController@getModul');
+
+// Dosen
+Route::apiResource('dosen', 'DosenController');
+Route::get('getDosen/{id}', 'DosenController@getDosen');
+
+// Laravue
 Route::namespace('Api')->group(function() {
     Route::post('auth/login', 'AuthController@login');
     Route::group(['middleware' => 'auth:sanctum'], function () {

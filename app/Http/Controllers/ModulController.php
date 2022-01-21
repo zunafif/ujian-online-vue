@@ -7,7 +7,7 @@ use App\Laravue\Models\Modul;
 use App\Laravue\Models\Praktikum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Arr; 
+use Illuminate\Support\Arr;
 use Config;
 
 class ModulController extends Controller
@@ -22,13 +22,18 @@ class ModulController extends Controller
         $limitConfig = config('config.paginate');
         $searchParam = $request->all();
         $nama_modul = Arr::get($searchParam, 'nama_modul', '');
+        $nama = Arr::get($searchParam, 'nama', '');
         $limit = Arr::get($searchParam, 'limit', $limitConfig);
         $data = Modul::query()
             ->join('praktikum', 'modul.id_praktikum', 'praktikum.id')
             ->select('modul.id','modul.id_praktikum','modul.nama_modul','praktikum.nama','modul.jumlah_bab','modul.materi');
-        
+
         if(!empty($nama_modul)){
             $data->where('nama_modul', 'LIKE', '%'. $nama_modul .'%');
+        }
+
+        if(!empty($nama)){
+            $data->where('nama', 'LIKE', '%'. $nama .'%');
         }
 
         return ModulResource::collection($data->paginate($limit));
@@ -60,7 +65,7 @@ class ModulController extends Controller
                 'materi' => ['required'],
             ]
         );
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 403);
         } else {
@@ -71,7 +76,7 @@ class ModulController extends Controller
                 'jumlah_bab' => $params['jumlah_bab'],
                 'materi' => $params['materi'],
             ]);
-            
+
             return new ModulResource($modul);
         }
     }
@@ -111,14 +116,14 @@ class ModulController extends Controller
             if ($modul === null) {
                 return response()->json(['error' => 'Modul tidak ditemukan'], 404);
             }
-    
+
             $validator = Validator::make(
                 $request->all(),
                 [
                     'nama_modul' => ['required']
                 ]
             );
-    
+
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 403);
             } else {
@@ -129,7 +134,7 @@ class ModulController extends Controller
                 $modul->materi = $params['materi'];
                 $modul->save();
             }
-    
+
             return new ModulResource($modul);
         }
     }
@@ -148,5 +153,18 @@ class ModulController extends Controller
             response()->json(['error' => $ex->getMessage()], 403);
         }
         return response()->json(null, 204);
+    }
+
+    public function getModul($id)
+    {
+        $modul = ModulResource::collection(Modul::query()
+        ->join('praktikum', 'modul.id_praktikum', 'praktikum.id')
+        ->select('modul.id','modul.id_praktikum','modul.nama_modul','praktikum.nama','modul.jumlah_bab','modul.materi')
+        ->where('modul.id', $id)
+        ->get());
+
+        response()->json($modul);
+
+        return $modul;
     }
 }

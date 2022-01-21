@@ -22,6 +22,12 @@ const praktikumRoutes = {
       name: 'ModulList',
       meta: { title: 'Modul', icon: 'layout' },
     },
+    {
+      path: 'dosen',
+      component: () => import('@/views/praktikum/Dosen'),
+      name: 'DosenlList',
+      meta: { title: 'Dosen', icon: 'layout' },
+    },
   ],
 };
 export default praktikumRoutes;

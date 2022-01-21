@@ -1,7 +1,8 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.nama_modul" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.nama_modul" placeholder="Modul" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.nama" placeholder="Praktikum" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t('table.search') }}
       </el-button>
@@ -10,7 +11,7 @@
       </el-button>
     </div>
     <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
-      <el-table-column align="center" label="ID" prop="id" sortable="custom" width="60">
+      <el-table-column align="center" label="No" prop="id" width="60">
         <template slot-scope="scope">
           <span>{{ scope.row.index }}</span>
         </template>
@@ -42,12 +43,9 @@
 
       <el-table-column align="center" label="Actions" width="235">
         <template slot-scope="scope">
-          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEditForm(scope.row.id, scope.row.nama);">
-            Edit
-          </el-button>
-          <el-button type="danger" size="small" icon="el-icon-delete" @click="handleDelete(scope.row.id, scope.row.nama);">
-            Delete
-          </el-button>
+          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEditForm(scope.row.id, scope.row.nama);" />
+          <el-button type="danger" size="small" icon="el-icon-delete" @click="handleDelete(scope.row.id, scope.row.nama);" />
+          <el-button type="success" size="small" icon="el-icon-view" @click="handleView(scope.row.id);" />
         </template>
       </el-table-column>
     </el-table>
@@ -64,8 +62,8 @@
           <span>{{ scope.row.materi }}</span>
         </template> -->
           <el-form-item label="Praktikum" prop="nama">
-            <el-select v-model="currentModul.id_praktikum" class="filter-item" placeholder="Please select" @change="switchView($event, $event.target.selectedIndex)">
-              <el-option v-for="(item, index) in statusOptions" :key="item" :label="item" :value="index+1" />
+            <el-select v-model="currentModul.id_praktikum" class="filter-item" placeholder="Please select">
+              <el-option v-for="item in praktikum" :key="item.id" :label="item.nama" :value="item.id" />
             </el-select>
           </el-form-item>
           <el-form-item label="Jumlah Bab" prop="jumlah_bab">
@@ -85,6 +83,15 @@
         </div>
       </div>
     </el-dialog>
+
+    <el-dialog :visible.sync="viewForm">
+      <detail-modul
+        v-if="viewForm"
+        :list-modul="listModul"
+        @handleDelete="handleDelete"
+        @handleEditForm="handleEditForm"
+      />
+    </el-dialog>
   </div>
 </template>
 
@@ -92,26 +99,32 @@
 import Pagination from '@/components/Pagination';
 import Resource from '@/api/resource';
 import waves from '@/directive/waves';
+import detailModul from './detailModul';
 const modulResource = new Resource('modul');
+const praktikumResource = new Resource('praktikum');
+const detailResource = new Resource('getModul');
 
 export default {
   name: 'ModulList',
-  components: { Pagination },
+  components: { Pagination, detailModul },
   directives: { waves },
   data() {
     return {
       total: 0,
       tableKey: 0,
+      praktikum: null,
       list: null,
+      listModul: null,
+      viewForm: false,
       formTitle: '',
       listLoading: true,
       modulFormVisible: false,
       currentModul: {},
-      statusOptions: ['Sistem operasi', 'Jaringan Komputer', 'Basis Data', 'Pemrograman Berbasis Objek', 'Struktur Data', 'Bahasa Pemrograman Java', 'Multimedia'],
       listQuery: {
         page: 1,
         limit: 5,
         nama_modul: undefined,
+        nama: undefined,
         sort: '+id',
         statusOption: undefined,
       },
@@ -119,6 +132,7 @@ export default {
   },
   created() {
     this.getList();
+    this.getPraktikum();
   },
   methods: {
     async getList() {
@@ -131,6 +145,12 @@ export default {
         element['index'] = (page - 1) * limit + index + 1;
       });
       this.total = meta.total;
+      this.listLoading = false;
+    },
+    async getPraktikum() {
+      this.listLoading = true;
+      const { data } = await praktikumResource.list({});
+      this.praktikum = data;
       this.listLoading = false;
     },
     handleFilter() {
@@ -164,6 +184,7 @@ export default {
           console.log(error);
         }).finally(() => {
           this.modulFormVisible = false;
+          this.viewForm = false;
         });
       } else {
         modulResource
@@ -176,7 +197,7 @@ export default {
             });
             this.currentModul = {
               nama_modul: '',
-              nama: '',
+              id_praktikum: undefined,
               jumlah_bab: '',
               materi: '',
             };
@@ -211,6 +232,7 @@ export default {
             message: 'Delete completed',
           });
           this.getList();
+          this.viewForm = false;
         }).catch(error => {
           console.log(error);
         });
@@ -225,6 +247,11 @@ export default {
       this.formTitle = 'Edit Modul';
       this.currentModul = this.list.find(modul => modul.id === id);
       this.modulFormVisible = true;
+    },
+    async handleView(id) {
+      this.viewForm = true;
+      const { data } = await detailResource.get(id);
+      this.listModul = data;
     },
   },
 };

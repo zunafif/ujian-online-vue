@@ -15,10 +15,10 @@ class CreatePraktikumTable extends Migration
     {
         Schema::create('praktikum', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('nama');
-            $table->string('periode');
-            $table->string('kode');
-            $table->string('status');
+            $table->string('nama')->nullable();
+            $table->string('periode')->nullable();
+            $table->string('kode')->nullable();
+            $table->string('status')->default('nonaktif');
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->useCurrent();
         });

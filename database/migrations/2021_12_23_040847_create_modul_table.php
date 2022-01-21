@@ -16,9 +16,9 @@ class CreateModulTable extends Migration
         Schema::create('modul', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('id_praktikum')->unsigned();
-            $table->string('nama_modul');
-            $table->string('jumlah_bab');
-            $table->string('materi');
+            $table->string('nama_modul')->nullable();;
+            $table->string('jumlah_bab')->nullable();;
+            $table->string('materi')->nullable();;
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->useCurrent();
         });
